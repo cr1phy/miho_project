@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(miho_project LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_library(miho_project lexer.cpp parser.cpp miho_c.cpp)
+target_include_directories(miho_project PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(lexer_test tests/lexer_test.cpp)
+    target_link_libraries(lexer_test PRIVATE miho_project)
+    add_test(NAME lexer COMMAND lexer_test)
+    add_executable(parser_test tests/parser_test.cpp)
+    target_link_libraries(parser_test PRIVATE miho_project)
+    add_test(NAME parser COMMAND parser_test)
+    add_executable(ffi_test tests/ffi_test.c)
+    target_link_libraries(ffi_test PRIVATE miho_project)
+    add_test(NAME ffi COMMAND ffi_test)
+endif()
