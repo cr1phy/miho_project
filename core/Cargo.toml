@@ -1,7 +1,0 @@
-[package]
-name = "qq-core"
-version = "0.1.0"
-edition = "2024"
-
-[dependencies]
-vodozemac = "0.11.0"
