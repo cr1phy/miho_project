@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-build:
+    name: Test and build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: backend/.python-version
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Install Python dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . build pytest
+
+      - name: Detect and run Python tests
+        shell: python
+        run: |
+          import pathlib
+          import subprocess
+          import sys
+
+          repo = pathlib.Path.cwd()
+          backend = repo / "backend"
+
+          if not backend.exists():
+              print("backend directory not found; skipping Python tests")
+              raise SystemExit(0)
+
+          test_patterns = ["test_*.py", "*_test.py", "test*.py"]
+          has_tests = any(test_file.is_file() for pattern in test_patterns for test_file in backend.rglob(pattern))
+          has_pytest_config = (backend / "pyproject.toml").is_file()
+
+          if has_tests or has_pytest_config:
+              print("Running pytest for backend")
+              result = subprocess.run([sys.executable, "-m", "pytest", "-q", "backend"], check=False)
+              if result.returncode not in (0, 5):
+                  raise SystemExit(result.returncode)
+              if result.returncode == 5:
+                  print("pytest did not find tests; continuing")
+          else:
+              print("No Python test files detected; skipping Python tests")
+
+      - name: Set up Rust
+        if: ${{ hashFiles('core/Cargo.toml') != '' }}
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        if: ${{ hashFiles('core/Cargo.toml') != '' }}
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: core
+
+      - name: Run Rust tests
+        if: ${{ hashFiles('core/Cargo.toml') != '' }}
+        working-directory: core
+        run: cargo test --locked
+
+      - name: Build Python package
+        working-directory: backend
+        run: python -m build
+
+      - name: Build Rust crate
+        if: ${{ hashFiles('core/Cargo.toml') != '' }}
+        working-directory: core
+        run: cargo build --release --locked
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+          path: |
+            backend/dist/*
+            core/target/release/*
