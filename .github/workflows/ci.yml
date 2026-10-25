@@ -22,12 +22,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - compiler: gcc
+          - os: ubuntu-24.04
+            compiler: gcc
             cc: gcc
             cxx: g++
-          - compiler: clang
+          - os: ubuntu-24.04
+            compiler: clang
             cc: clang
             cxx: clang++
+          - os: macos-latest
+            compiler: appleclang
+            cc: clang
+            cxx: clang++
+          - os: windows-latest
+            compiler: msvc
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
