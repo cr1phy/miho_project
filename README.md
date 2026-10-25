@@ -123,6 +123,9 @@ make all    # сборка ядра и настольного клиента
 ```
 
 GitHub Actions запускается при push в `development`, `master`, `main`,
-для pull request и вручную. Ядро проверяется с GCC и Clang, AddressSanitizer
-и UndefinedBehaviorSanitizer; клиент — с Rust 1.96.0 через rustfmt, Clippy,
-тесты FFI/интерфейса без графической сессии и сборку исполняемого файла.
+для pull request и вручную. Ядро проверяется на Linux/macOS/Windows
+(GCC, Clang, AppleClang, MSVC), при поддержке — c AddressSanitizer
+и UndefinedBehaviorSanitizer. Клиент на Rust 1.96.0 собирается и тестируется
+на Linux/macOS/Windows (rustfmt и Clippy выполняются в Linux job). После
+успешных сборок workflow загружает бинарные артефакты ядра и клиента в
+GitHub Actions Artifacts для скачивания со страницы run.
