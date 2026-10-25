@@ -7,6 +7,20 @@ fn run(command: &mut Command) {
     assert!(status.success(), "Native library build failed: {command:?}");
 }
 
+fn normalize_cmake_source_path(path: PathBuf) -> PathBuf {
+    #[cfg(windows)]
+    {
+        let raw = path.to_string_lossy();
+        if let Some(rest) = raw.strip_prefix(r"\\?\UNC\") {
+            return PathBuf::from(format!(r"\\{rest}"));
+        }
+        if let Some(rest) = raw.strip_prefix(r"\\?\") {
+            return PathBuf::from(rest);
+        }
+    }
+    path
+}
+
 fn main() {
     println!("cargo:rerun-if-env-changed=MIHO_CORE_DIR");
     let manifest = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
@@ -15,6 +29,7 @@ fn main() {
         .unwrap_or_else(|| manifest.join("../core"))
         .canonicalize()
         .expect("Cannot find ../core; set MIHO_CORE_DIR to the C++ source directory");
+    let core = normalize_cmake_source_path(core);
     for file in [
         "CMakeLists.txt",
         "lexer.cpp",
