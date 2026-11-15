@@ -21,6 +21,7 @@ client: frontend
 
 test: core frontend
 	ctest --test-dir $(BUILD_DIR) --output-on-failure --no-tests=error
+	cd $(APP_DIR) && $(BUN) test
 	$(CARGO) test --locked --manifest-path $(APP_MANIFEST)
 
 check: frontend

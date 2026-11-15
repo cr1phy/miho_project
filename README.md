@@ -122,7 +122,7 @@ make run   # bun install + bun run tauri dev
 ## Проверки и CI
 
 ```sh
-make test   # CTest для ядра и cargo test для клиента (FFI)
+make test   # CTest для ядра, bun test для редактора и cargo test для FFI
 make check  # oxlint, rustfmt и Clippy
 make all    # сборка ядра и настольного клиента
 ```
@@ -130,7 +130,7 @@ make all    # сборка ядра и настольного клиента
 GitHub Actions запускается при push в `development`, `master`, `main`,
 для pull request и вручную. Ядро проверяется на Linux/macOS/Windows
 (GCC, Clang, AppleClang, MSVC), при поддержке — c AddressSanitizer
-и UndefinedBehaviorSanitizer. Клиент на Rust 1.96.0 собирается и тестируется
-на Linux/macOS/Windows (rustfmt и Clippy выполняются в Linux job). После
-успешных сборок workflow загружает бинарные артефакты ядра и клиента в
-GitHub Actions Artifacts для скачивания со страницы run.
+и UndefinedBehaviorSanitizer. Приложение из `app/` на Rust 1.96.0 и Bun
+собирается и тестируется на Linux/macOS/Windows (oxlint, rustfmt и Clippy
+выполняются в Linux job). После успешных сборок workflow загружает бинарные
+артефакты ядра и приложения в GitHub Actions Artifacts.
