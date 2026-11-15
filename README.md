@@ -104,21 +104,26 @@ ctest --test-dir build --output-on-failure
 
 ## Настольный клиент
 
-Клиент на Rust и egui подключает `miho_project` через C ABI. Требуются Rust 1.95+,
-CMake и компилятор C/C++. Запуск из корня репозитория:
+Клиент в `app/` — редактор логических схем на Tauri 2 (Rust) и React. Он подключает
+`miho_project` через C ABI: `app/src-tauri/build.rs` компилирует исходники из `core/`
+и статически связывает их с приложением, а команда Tauri `truth_table`
+(`app/src-tauri/src/ffi.rs`) возвращает таблицу истинности формулы, которую редактор
+строит по схеме в записи ядра (`&`, `|`, `^`, `~&`, `~|`, `==`, `~`).
+
+Требуются Rust, Bun и компилятор C++20. Запуск из корня репозитория:
 
 ```sh
-make run
+make run   # bun install + bun run tauri dev
 ```
 
-Cargo автоматически собирает ядро и статически связывает его с клиентом.
-Подробности ввода и FFI — в [client/README.md](client/README.md).
+`bun run dev` в `app/` открывает редактор в браузере без ядра: таблицы тогда
+считает сама страница, а в панели таблицы показана метка «без ядра».
 
 ## Проверки и CI
 
 ```sh
-make test   # CTest для ядра и cargo test для клиента
-make check  # rustfmt и Clippy
+make test   # CTest для ядра и cargo test для клиента (FFI)
+make check  # oxlint, rustfmt и Clippy
 make all    # сборка ядра и настольного клиента
 ```
 

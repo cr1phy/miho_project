@@ -1,7 +1,10 @@
-.PHONY: all core client test check run
+.PHONY: all core frontend client test check run
 
 BUILD_DIR ?= build
 CARGO ?= cargo
+BUN ?= bun
+APP_DIR := app
+APP_MANIFEST := $(APP_DIR)/src-tauri/Cargo.toml
 
 all: core client
 
@@ -9,16 +12,21 @@ core:
 	cmake -S core -B $(BUILD_DIR) -DBUILD_TESTING=ON
 	cmake --build $(BUILD_DIR) --parallel 2
 
-client:
-	$(CARGO) build --locked --manifest-path client/Cargo.toml
+# The Tauri crate embeds app/dist, so the frontend is built first.
+frontend:
+	cd $(APP_DIR) && $(BUN) install --frozen-lockfile && $(BUN) run build
 
-test: core
+client: frontend
+	$(CARGO) build --locked --manifest-path $(APP_MANIFEST)
+
+test: core frontend
 	ctest --test-dir $(BUILD_DIR) --output-on-failure --no-tests=error
-	$(CARGO) test --locked --manifest-path client/Cargo.toml
+	$(CARGO) test --locked --manifest-path $(APP_MANIFEST)
 
-check:
-	$(CARGO) fmt --manifest-path client/Cargo.toml --all -- --check
-	$(CARGO) clippy --locked --manifest-path client/Cargo.toml --all-targets -- -D warnings
+check: frontend
+	cd $(APP_DIR) && $(BUN) run lint
+	$(CARGO) fmt --manifest-path $(APP_MANIFEST) --all -- --check
+	$(CARGO) clippy --locked --manifest-path $(APP_MANIFEST) --all-targets -- -D warnings
 
 run:
-	$(CARGO) run --locked --manifest-path client/Cargo.toml
+	cd $(APP_DIR) && $(BUN) install --frozen-lockfile && $(BUN) run tauri dev
