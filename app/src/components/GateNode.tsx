@@ -11,6 +11,8 @@ type Props = {
 	/** Whether each input pin already has a wire, by pin index. */
 	filledInputs: boolean[];
 	wireActive: boolean;
+	/** Signal on a terminal: the input's own value or the computed value of an output. */
+	value: boolean | null;
 	onDragStart: (event: ReactPointerEvent<HTMLDivElement>, gate: PlacedGate) => void;
 	onDragMove: (event: ReactPointerEvent<HTMLDivElement>) => void;
 	onDragEnd: (event: ReactPointerEvent<HTMLDivElement>) => void;
@@ -23,7 +25,7 @@ type Props = {
 // Buttons inside a gate must not start a drag of the gate itself.
 const stopPointer = (event: ReactPointerEvent) => event.stopPropagation();
 
-export function GateNode({ gate, selected, highlighted, formulaRoot, filledInputs, wireActive, onDragStart, onDragMove, onDragEnd, onSelect, onToggle, onRemove, onWireStart }: Props) {
+export function GateNode({ gate, selected, highlighted, formulaRoot, filledInputs, wireActive, value, onDragStart, onDragMove, onDragEnd, onSelect, onToggle, onRemove, onWireStart }: Props) {
 	const className = [
 		"placed-gate",
 		gate.kind === "INPUT" && "placed-input",
@@ -45,11 +47,11 @@ export function GateNode({ gate, selected, highlighted, formulaRoot, filledInput
 			onPointerDown={(event) => onDragStart(event, gate)} onPointerMove={onDragMove} onPointerUp={onDragEnd} onPointerCancel={onDragEnd}
 			onClick={() => onSelect(gate.id)}>
 			{gate.kind === "INPUT" ? <>
-				<div className="input-terminal"><span className="input-node-letter">{gate.variable}</span><span className="terminal-ring" /></div>
-				<button className={`value-toggle ${gate.value ? "is-on" : ""}`} type="button" onPointerDown={stopPointer} onClick={() => onToggle(gate.id)}>{gate.value ? "1" : "0"}</button>
+				<div className="input-terminal"><span className="input-node-letter">{gate.variable}</span><span className={`terminal-ring ${value ? "is-on" : ""}`} /></div>
+				<button className={`value-toggle ${gate.value ? "is-on" : ""}`} type="button" aria-label={`Значение ${gate.variable}`} title="Переключить значение" onPointerDown={stopPointer} onClick={() => onToggle(gate.id)}>{gate.value ? "1" : "0"}</button>
 				{removeButton}
 			</> : gate.kind === "OUTPUT" ? <>
-				<div className="output-terminal"><span className="terminal-ring filled" /><strong>{gate.variable || "Y"}</strong></div>
+				<div className="output-terminal"><span className={`terminal-ring filled ${value ? "is-on" : ""}`} /><strong>{gate.variable || "Y"}</strong>{value !== null && <span className={`terminal-value ${value ? "is-on" : ""}`}>{value ? 1 : 0}</span>}</div>
 				{removeButton}
 				{inputPorts}
 			</> : <>

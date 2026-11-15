@@ -1,7 +1,10 @@
 import type { Connection, Expr, ExpressionData, GateKind, Highlight, PlacedGate } from "../types";
 import { incomingByTarget } from "./graph";
 
-const UNKNOWN: Expr = { text: "…", value: null };
+const UNKNOWN: Expr = { text: "…", value: null, source: null };
+
+/** Operators of the C++ core (see the notation table in the README). */
+const CORE_OPERATOR: Partial<Record<GateKind, string>> = { AND: "&", OR: "|", XOR: "^", NAND: "~&", NOR: "~|", XNOR: "==" };
 
 function evaluate(kind: GateKind, a: boolean, b: boolean) {
 	switch (kind) {
@@ -41,28 +44,36 @@ export function buildExpressionData(placedGates: PlacedGate[], connections: Conn
 	function build(id: number, path = new Set<number>()): Expr {
 		const gate = byId.get(id);
 		if (!gate || path.has(id)) return UNKNOWN;
-		if (gate.kind === "INPUT") return { text: gate.variable, value: values?.get(id) ?? gate.value };
+		if (gate.kind === "INPUT") return { text: gate.variable, value: values?.get(id) ?? gate.value, source: gate.variable };
 		const nextPath = new Set(path).add(id);
 		const wires = incoming.get(id) ?? [];
 		const children: Expr[] = Array.from({ length: gate.inputs }, (_, index) => {
 			const wire = wires.find((item) => item.input === index);
 			return wire ? build(wire.from, nextPath) : UNKNOWN;
 		});
-		if (gate.kind === "OUTPUT") return { text: children[0].text, value: children[0].value };
-		if (children.some((child) => child.value === null)) return { text: "—", value: null };
+		if (gate.kind === "OUTPUT") return children[0];
+		if (children.some((child) => child.value === null)) return { text: "—", value: null, source: null };
 		const text = gate.kind === "NOT"
 			? `¬${children[0].text}`
 			: `(${children[0].text} ${gate.symbol} ${children[1].text})`;
-		return { text, value: evaluate(gate.kind, Boolean(children[0].value), Boolean(children[1]?.value)) };
+		const source = gate.kind === "NOT"
+			? `~${children[0].source}`
+			: `(${children[0].source} ${CORE_OPERATOR[gate.kind]} ${children[1].source})`;
+		return { text, source, value: evaluate(gate.kind, Boolean(children[0].value), Boolean(children[1]?.value)) };
 	}
 
+	const inputs = placedGates.filter((gate) => gate.kind === "INPUT");
 	return {
-		inputs: placedGates.filter((gate) => gate.kind === "INPUT"),
-		outputs: sinks.map((gate, index) => ({
-			gate,
-			expr: build(gate.id),
-			label: gate.kind === "OUTPUT" ? (gate.variable || `Y${index + 1}`) : `F${index + 1}`,
-		})),
+		inputs,
+		outputs: sinks.map((gate, index) => {
+			const ancestors = collectHighlight(gate.id, connections).gateIds;
+			return {
+				gate,
+				expr: build(gate.id),
+				label: gate.kind === "OUTPUT" ? (gate.variable || `Y${index + 1}`) : `F${index + 1}`,
+				inputs: inputs.filter((input) => ancestors.has(input.id)),
+			};
+		}),
 	};
 }
 
@@ -82,4 +93,9 @@ export function collectHighlight(outputId: number | null, connections: Connectio
 	};
 	visit(outputId);
 	return { gateIds, wireIds };
+}
+
+/** Index of the truth-table row matching the inputs' current values (first input = high bit). */
+export function currentRow(inputs: PlacedGate[]) {
+	return inputs.reduce((row, input) => row * 2 + (input.value ? 1 : 0), 0);
 }

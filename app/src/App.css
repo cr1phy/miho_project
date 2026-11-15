@@ -379,3 +379,72 @@ button { font: inherit; }
   .app-shell .brand { gap: 8px; }
   .app-shell .brand-name { font-size: 12px; }
 }
+/* Prototype 0.5: panel headings, live values, truth table from the C++ core */
+.app-shell.light-theme { --on: #1f8a5f; --on-soft: #e3f4ec; --off: #a65a5a; --warn: #a8661a; --warn-soft: #fdf3e2; }
+.app-shell.dark-theme { --on: #5fd3ad; --on-soft: #113a3b; --off: #e08c8c; --warn: #f0b65e; --warn-soft: #33290f; }
+.app-shell h1, .app-shell h2, .app-shell p { margin: 0; }
+.app-shell .brand-name { flex: 0 0 auto; font-size: 15px; font-weight: 650; }
+.app-shell .brand-caption { min-width: 0; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell .brand-mark { background: var(--accent); color: var(--surface); }
+.app-shell .theme-button:focus-visible, .app-shell .gate-item:focus-visible, .app-shell .clear-button:focus-visible,
+.app-shell .formula-result:focus-visible, .app-shell .value-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app-shell .panel-title { color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
+.app-shell .sidebar { display: grid; align-content: start; gap: 20px; padding: 6px 0; }
+.app-shell .gate-list { margin-top: 9px; }
+.app-shell .gate-item { min-height: 38px; }
+.app-shell .gate-item:hover .add-mark { color: var(--accent); }
+.app-shell .gate-item:active { transform: translateY(1px); }
+
+.app-shell .workspace-heading { min-height: 38px; align-items: center; justify-content: flex-start; gap: 12px; }
+.app-shell .workspace-title { font-size: 15px; font-weight: 650; letter-spacing: -.02em; }
+.app-shell .workspace-meta { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.app-shell .workspace-actions { margin-left: auto; }
+.app-shell .clear-button { padding: 6px 12px; font-size: 11px; }
+
+.app-shell .canvas { border-radius: 10px; }
+.app-shell .canvas-empty { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; color: var(--muted); font-size: 13px; line-height: 1.6; text-align: center; pointer-events: none; }
+.app-shell .canvas-notice { position: absolute; z-index: 8; left: 50%; bottom: 14px; max-width: calc(100% - 28px); padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); background: var(--surface-soft); font-size: 12px; text-align: center; transform: translateX(-50%); pointer-events: none; box-shadow: 0 4px 14px rgba(8, 20, 40, .14); }
+.app-shell .canvas-notice-warning { border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+
+.app-shell .placed-input .value-toggle { left: 0; bottom: -8px; width: 28px; height: 22px; border-radius: 6px; font-size: 11px; opacity: 1; }
+.app-shell .value-toggle { border-color: var(--line); color: var(--muted); background: var(--surface-soft); font-variant-numeric: tabular-nums; }
+.app-shell .value-toggle.is-on { border-color: var(--on); color: var(--on); background: var(--on-soft); }
+.app-shell .terminal-ring.is-on { border-color: var(--on); background: var(--on); box-shadow: 0 0 0 4px color-mix(in srgb, var(--on) 22%, transparent); }
+.app-shell .terminal-value { min-width: 20px; padding: 1px 5px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: var(--surface-soft); font-size: 11px; font-weight: 650; text-align: center; font-variant-numeric: tabular-nums; }
+.app-shell .terminal-value.is-on { border-color: var(--on); color: var(--on); background: var(--on-soft); }
+.app-shell .output-terminal { gap: 9px; }
+
+.app-shell .results-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; gap: 14px; margin-top: 14px; }
+.app-shell .results-grid .formula-panel, .app-shell .results-grid .truth-panel { margin: 0; padding: 16px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.app-shell .panel-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.app-shell .panel-hint { margin-left: auto; color: var(--muted); font-size: 10px; }
+.app-shell .panel-empty { padding: 10px 0 4px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.app-shell .panel-error { color: var(--off); }
+.app-shell .engine-badge { margin-left: auto; padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 10px; white-space: nowrap; }
+.app-shell .engine-badge.engine-core { border-color: var(--on); color: var(--on); background: var(--on-soft); }
+
+.app-shell .formula-result { min-height: 46px; padding: 8px 10px; border-radius: 6px; }
+.app-shell .formula-result code { flex: 1 1 auto; font-size: 19px; }
+.app-shell .output-label { font-size: 18px; }
+.app-shell .result-value { flex: 0 0 auto; min-width: 26px; margin-left: auto; padding: 3px 0; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); background: var(--surface-soft); font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.app-shell .result-value.true { border-color: var(--on); color: var(--on); background: var(--on-soft); }
+.app-shell .result-value.false { color: var(--off); }
+
+.app-shell .core-source { display: block; margin-bottom: 10px; overflow-wrap: anywhere; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }
+.app-shell .truth-table-wrap { max-height: 300px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+.app-shell .truth-table { font-size: 12px; font-variant-numeric: tabular-nums; }
+.app-shell .truth-table th { position: sticky; top: 0; padding: 7px 8px; color: var(--muted); background: var(--surface-soft); font-size: 11px; }
+.app-shell .truth-table td { padding: 5px 8px; border-top: 1px solid var(--line); }
+.app-shell .truth-table .truth-result { border-left: 1px solid var(--line); }
+.app-shell .truth-table th.truth-result { color: var(--accent); }
+.app-shell .truth-one { color: var(--on); }
+.app-shell .truth-zero { color: var(--off); }
+.app-shell .truth-current td { background: var(--accent-soft); font-weight: 650; }
+
+@media (max-width: 1000px) { .app-shell .results-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 700px) {
+  .app-shell .sidebar { gap: 10px; }
+  .app-shell .brand-caption, .app-shell .panel-hint { display: none; }
+  .app-shell .formula-result code { font-size: 16px; }
+}

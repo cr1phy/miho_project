@@ -11,13 +11,15 @@ type Props = {
 	canvasRef: RefObject<HTMLDivElement | null>;
 	workspace: Workspace;
 	highlight: Highlight;
+	/** Current value of each output by gate id; null when it cannot be computed yet. */
+	outputValues: Map<number, boolean | null>;
 };
 
 type DragInfo = { id: number; pointerId: number; startX: number; startY: number; originX: number; originY: number };
 
 /** The drawing area: owns pointer handling for dragging gates and drawing wires. */
-export function Canvas({ canvasRef, workspace, highlight }: Props) {
-	const { placedGates, connections, selectedId, selectedWireId, selectedOutputId, wireDraft } = workspace;
+export function Canvas({ canvasRef, workspace, highlight, outputValues }: Props) {
+	const { placedGates, connections, selectedId, selectedWireId, selectedOutputId, wireDraft, notice } = workspace;
 	const dragRef = useRef<DragInfo | null>(null);
 
 	function pointInCanvas(clientX: number, clientY: number) {
@@ -76,6 +78,8 @@ export function Canvas({ canvasRef, workspace, highlight }: Props) {
 			onPointerCancel={workspace.cancelWire}
 			onClick={(event) => { if (event.target === canvasRef.current) workspace.clearSelection(); }}>
 			<div className="canvas-grid" />
+			{placedGates.length === 0 && <p className="canvas-empty">Добавьте входы и вентили из списка слева,<br />затем протяните провод от выхода элемента к входу другого.</p>}
+			{notice && <p className={`canvas-notice ${wireDraft ? "" : "canvas-notice-warning"}`} role="status">{notice}</p>}
 			<ConnectionsLayer placedGates={placedGates} connections={connections} highlightedWireIds={highlight.wireIds}
 				selectedWireId={selectedWireId} wireDraft={wireDraft} onWireClick={workspace.removeConnection} />
 			{placedGates.map((gate) => (
@@ -85,6 +89,7 @@ export function Canvas({ canvasRef, workspace, highlight }: Props) {
 					formulaRoot={selectedOutputId === gate.id}
 					filledInputs={Array.from({ length: gate.inputs }, (_, index) => connections.some((wire) => wire.to === gate.id && wire.input === index))}
 					wireActive={wireDraft?.from === gate.id}
+					value={gate.kind === "INPUT" ? gate.value : outputValues.get(gate.id) ?? null}
 					onDragStart={startDrag} onDragMove={moveDrag} onDragEnd={stopDrag}
 					onSelect={workspace.selectGate} onToggle={workspace.toggleInput} onRemove={workspace.removeGate}
 					onWireStart={startWire} />
