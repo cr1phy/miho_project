@@ -29,6 +29,13 @@ export function useWorkspace() {
 		saveWorkspace({ version: 2, placedGates, connections, nextId, nextWireId, nextVariable, isDark });
 	}, [placedGates, connections, nextId, nextWireId, nextVariable, isDark]);
 
+	// A rejection message fades on its own; the hint shown while a wire is being drawn stays.
+	useEffect(() => {
+		if (!notice || wireDraft) return;
+		const timer = window.setTimeout(() => setNotice(""), 4000);
+		return () => window.clearTimeout(timer);
+	}, [notice, wireDraft]);
+
 	function addGate(definition: GateDefinition, canvasWidth: number) {
 		const position = findFreeSlot(placedGates, definition, canvasWidth);
 		const variable = variableName(definition, nextVariable, placedGates);
