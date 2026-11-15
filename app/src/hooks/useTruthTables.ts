@@ -3,7 +3,6 @@ import { MAX_TABLE_VARIABLES, coreAvailable, coreTruthTable } from "../lib/core"
 import { buildExpressionData } from "../lib/expression";
 import type { Connection, OutputExpression, PlacedGate, TableState } from "../types";
 
-const MAX_SOURCE_LENGTH = 20_000;
 const MAX_CACHED_TABLES = 200;
 
 /** Fallback for a plain browser tab, where the C++ core is not available. */
@@ -29,9 +28,9 @@ export function useTruthTables(placedGates: PlacedGate[], connections: Connectio
 		const names = output.inputs.map((input) => input.variable);
 		const source = output.expr.source;
 		let problem: TableState | null = null;
-		if (source === null) problem = { status: "incomplete" };
-		else if (names.length > MAX_TABLE_VARIABLES) problem = { status: "error", message: `Слишком много переменных: ${names.length} (максимум ${MAX_TABLE_VARIABLES})` };
-		else if (source.length > MAX_SOURCE_LENGTH) problem = { status: "error", message: "Формула слишком длинная" };
+		// A complete circuit without a core formula is one whose formula was cut off as too long.
+		if (source === null) problem = output.expr.value === null ? { status: "incomplete" } : { status: "error", fromCore: false, message: "Формула слишком длинная для таблицы истинности" };
+		else if (names.length > MAX_TABLE_VARIABLES) problem = { status: "error", fromCore: false, message: `Слишком много переменных: ${names.length} (максимум ${MAX_TABLE_VARIABLES})` };
 		return { output, names, source, problem, key: `${source}\n${names.join(",")}` };
 	}), [outputs]);
 
@@ -49,7 +48,7 @@ export function useTruthTables(placedGates: PlacedGate[], connections: Connectio
 				: Promise.resolve().then(() => browserTruthTable(request.output, placedGates, connections));
 			rows.then(
 				(result) => store({ status: "ready", rows: result }),
-				(error: unknown) => store({ status: "error", message: String(error) }),
+				(error: unknown) => store({ status: "error", fromCore: true, message: String(error) }),
 			);
 		}
 	}, [requests, cache, placedGates, connections]);

@@ -34,7 +34,7 @@ export function ConnectionsLayer({ placedGates, connections, highlightedWireIds,
 			{lines.map(({ wire, end, routeX, path, branch }) => (
 				<g key={wire.id} className={`connection-group ${highlightedWireIds.has(wire.id) ? "connection-highlighted" : ""} ${selectedWireId === wire.id ? "connection-selected" : ""}`}
 					onClick={(event) => { event.stopPropagation(); onWireClick(wire.id); }}>
-					<path className="connection-hit" d={path} />
+					<path className="connection-hit" d={path}><title>Нажмите, чтобы выделить; Delete — удалить</title></path>
 					<path className="connection-line" d={path} />
 					<circle className="connection-end" r="3.5" cx={end.x} cy={end.y} />
 					{branch && <circle className="connection-junction" r="3.2" cx={routeX} cy={end.y} />}

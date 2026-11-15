@@ -1,8 +1,9 @@
 import { INPUT_HEIGHT, INPUT_WIDTH, NODE_HEIGHT, NODE_WIDTH } from "../constants";
 import type { GateDefinition, GateKind, PlacedGate, Point } from "../types";
 
+/** Terminals (inputs and outputs) are drawn narrower than logic gates. */
 export function gateWidth(kind: GateKind | undefined) {
-	return kind === "INPUT" ? INPUT_WIDTH : NODE_WIDTH;
+	return kind === "INPUT" || kind === "OUTPUT" ? INPUT_WIDTH : NODE_WIDTH;
 }
 
 export function gateHeight(kind: GateKind | undefined) {
@@ -47,8 +48,7 @@ export function findFreeSlot(placedGates: PlacedGate[], definition: GateDefiniti
 		x = 18 + (slot % columns) * 160;
 		y = 18 + Math.floor(slot / columns) * 132;
 		const overlaps = placedGates.some((gate) => {
-			// Terminals (inputs and outputs) are drawn narrower than logic gates.
-			const otherWidth = gate.kind === "INPUT" || gate.kind === "OUTPUT" ? INPUT_WIDTH : NODE_WIDTH;
+			const otherWidth = gateWidth(gate.kind);
 			const otherHeight = gateHeight(gate.kind);
 			return x < gate.x + otherWidth + 18 && x + width + 18 > gate.x &&
 				y < gate.y + otherHeight + 18 && y + height + 18 > gate.y;

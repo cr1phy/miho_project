@@ -12,7 +12,8 @@ export type TableState =
 	| { status: "incomplete" }
 	| { status: "pending" }
 	| { status: "ready"; rows: boolean[] }
-	| { status: "error"; message: string };
+	/** `fromCore` is true when the core itself rejected the formula, false for limits of the editor. */
+	| { status: "error"; message: string; fromCore: boolean };
 export type ExpressionData = { inputs: PlacedGate[]; outputs: OutputExpression[] };
 export type Highlight = { gateIds: Set<number>; wireIds: Set<number> };
 

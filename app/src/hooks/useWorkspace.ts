@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react";
 import { findFreeSlot } from "../lib/geometry";
 import { wouldCreateCycle } from "../lib/graph";
+import { terminalName } from "../lib/names";
 import { loadWorkspace, saveWorkspace } from "../lib/storage";
 import type { Connection, GateDefinition, PlacedGate, Point, WireDraft } from "../types";
-
-function variableName(definition: GateDefinition, nextVariable: number, placedGates: PlacedGate[]) {
-	if (definition.kind === "INPUT") return nextVariable < 26 ? String.fromCharCode(65 + nextVariable) : `X${nextVariable - 25}`;
-	if (definition.kind === "OUTPUT") return `Y${placedGates.filter((gate) => gate.kind === "OUTPUT").length || ""}`;
-	return "";
-}
 
 /** All editor state (circuit, selection, wire being drawn, theme) and the actions that change it. */
 export function useWorkspace() {
@@ -38,7 +33,7 @@ export function useWorkspace() {
 
 	function addGate(definition: GateDefinition, canvasWidth: number) {
 		const position = findFreeSlot(placedGates, definition, canvasWidth);
-		const variable = variableName(definition, nextVariable, placedGates);
+		const variable = terminalName(definition, nextVariable, placedGates);
 		setPlacedGates((current) => [...current, { ...definition, id: nextId, variable, value: false, ...position }]);
 		setNextId((current) => current + 1);
 		if (definition.kind === "INPUT") setNextVariable((current) => current + 1);
@@ -66,6 +61,11 @@ export function useWorkspace() {
 	function selectGate(id: number) {
 		setSelectedId(id);
 		setSelectedWireId(null);
+	}
+
+	function selectWire(id: number) {
+		setSelectedWireId(id);
+		setSelectedId(null);
 	}
 
 	function clearSelection() {
@@ -150,7 +150,7 @@ export function useWorkspace() {
 	return {
 		placedGates, connections, isDark, selectedId, selectedWireId, selectedOutputId, wireDraft, notice,
 		addGate, removeGate, moveGate, toggleInput,
-		selectGate, clearSelection, toggleOutput,
+		selectGate, selectWire, clearSelection, toggleOutput,
 		removeConnection, startWire, moveWire, finishWire, cancelWire,
 		clearWorkspace, toggleTheme,
 	};

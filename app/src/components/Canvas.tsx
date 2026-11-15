@@ -81,7 +81,7 @@ export function Canvas({ canvasRef, workspace, highlight, outputValues }: Props)
 			{placedGates.length === 0 && <p className="canvas-empty">Добавьте входы и вентили из списка слева,<br />затем протяните провод от выхода элемента к входу другого.</p>}
 			{notice && <p className={`canvas-notice ${wireDraft ? "" : "canvas-notice-warning"}`} role="status">{notice}</p>}
 			<ConnectionsLayer placedGates={placedGates} connections={connections} highlightedWireIds={highlight.wireIds}
-				selectedWireId={selectedWireId} wireDraft={wireDraft} onWireClick={workspace.removeConnection} />
+				selectedWireId={selectedWireId} wireDraft={wireDraft} onWireClick={workspace.selectWire} />
 			{placedGates.map((gate) => (
 				<GateNode key={gate.id} gate={gate}
 					selected={selectedId === gate.id}

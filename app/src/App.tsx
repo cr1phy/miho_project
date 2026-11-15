@@ -23,11 +23,12 @@ function App() {
 	const tables = useTruthTables(placedGates, connections, outputs);
 
 	// The value of an output is read from its truth table, so in the desktop app it comes from the core.
+	// Without a table the editor's own value is shown, unless the core rejected the formula.
 	const outputValues = useMemo(() => new Map(outputs.map((output) => {
 		const table = tables.get(output.gate.id);
 		const value = table?.status === "ready" ? table.rows[currentRow(output.inputs)] ?? null
-			: table?.status === "pending" ? output.expr.value
-			: null;
+			: table?.status === "error" && table.fromCore ? null
+			: output.expr.value;
 		return [output.gate.id, value];
 	})), [outputs, tables]);
 

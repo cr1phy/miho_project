@@ -1,7 +1,12 @@
 import type { Connection, Expr, ExpressionData, GateKind, Highlight, PlacedGate } from "../types";
 import { incomingByTarget } from "./graph";
 
-const UNKNOWN: Expr = { text: "…", value: null, source: null };
+/** An input pin with nothing connected to it. */
+const UNKNOWN: Expr = { text: "?", value: null, source: null };
+
+/** Longer formulas are shown as "…": shared sub-circuits can double the text at every level. */
+export const MAX_FORMULA_LENGTH = 2000;
+const TOO_LONG = "…";
 
 /** Operators of the C++ core (see the notation table in the README). */
 const CORE_OPERATOR: Partial<Record<GateKind, string>> = { AND: "&", OR: "|", XOR: "^", NAND: "~&", NOR: "~|", XNOR: "==" };
@@ -41,25 +46,41 @@ export function buildExpressionData(placedGates: PlacedGate[], connections: Conn
 	const independentSinks = placedGates.filter((gate) => isOpenEnd(gate) && !ancestorsOfOutputs.has(gate.id));
 	const sinks = [...explicitOutputs, ...independentSinks];
 
+	// A gate feeding several others is built once; without this a shared sub-circuit is rebuilt per use.
+	const built = new Map<number, Expr>();
+
 	function build(id: number, path = new Set<number>()): Expr {
+		const ready = built.get(id);
+		if (ready) return ready;
 		const gate = byId.get(id);
 		if (!gate || path.has(id)) return UNKNOWN;
-		if (gate.kind === "INPUT") return { text: gate.variable, value: values?.get(id) ?? gate.value, source: gate.variable };
-		const nextPath = new Set(path).add(id);
-		const wires = incoming.get(id) ?? [];
+		const expr = gate.kind === "INPUT"
+			? { text: gate.variable, value: values?.get(id) ?? gate.value, source: gate.variable }
+			: combine(gate, path);
+		built.set(id, expr);
+		return expr;
+	}
+
+	function combine(gate: PlacedGate, path: Set<number>): Expr {
+		const nextPath = new Set(path).add(gate.id);
+		const wires = incoming.get(gate.id) ?? [];
 		const children: Expr[] = Array.from({ length: gate.inputs }, (_, index) => {
 			const wire = wires.find((item) => item.input === index);
 			return wire ? build(wire.from, nextPath) : UNKNOWN;
 		});
 		if (gate.kind === "OUTPUT") return children[0];
-		if (children.some((child) => child.value === null)) return { text: "—", value: null, source: null };
-		const text = gate.kind === "NOT"
-			? `¬${children[0].text}`
-			: `(${children[0].text} ${gate.symbol} ${children[1].text})`;
-		const source = gate.kind === "NOT"
-			? `~${children[0].source}`
-			: `(${children[0].source} ${CORE_OPERATOR[gate.kind]} ${children[1].source})`;
-		return { text, source, value: evaluate(gate.kind, Boolean(children[0].value), Boolean(children[1]?.value)) };
+		// An unfinished gate still shows its formula, with "?" for every free pin.
+		const format = (parts: string[], not: string, operator: string) =>
+			gate.kind === "NOT" ? `${not}${parts[0]}` : `(${parts[0]} ${operator} ${parts[1]})`;
+		const text = format(children.map((child) => child.text), "¬", gate.symbol);
+		const sources = children.map((child) => child.source);
+		const source = sources.every((item) => item !== null) ? format(sources, "~", CORE_OPERATOR[gate.kind] ?? "") : null;
+		const complete = children.every((child) => child.value !== null);
+		return {
+			text: text.length > MAX_FORMULA_LENGTH ? TOO_LONG : text,
+			source: source !== null && source.length > MAX_FORMULA_LENGTH ? null : source,
+			value: complete ? evaluate(gate.kind, Boolean(children[0].value), Boolean(children[1]?.value)) : null,
+		};
 	}
 
 	const inputs = placedGates.filter((gate) => gate.kind === "INPUT");
