@@ -3,3 +3,5 @@
 /target/
 /core/target/
 /client/target/
+.omc
+.claude
